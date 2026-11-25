@@ -1,42 +1,40 @@
 #!/usr/bin/env python3
-"""One-line review of the most boring everyday object.
+"""A tribute to the hardest-working object in the house.
 
-Writes a single funny, true review (at most 200 characters) of a doorstop
-to /output/entry.txt. Standard library only, fully deterministic: the same
-text is written on every run.
+This program puts a single-line verdict on the humble doorstop into
+/output/entry.txt. Nothing here needs the network or any third-party
+package: the standard library does the whole job, and the same bytes
+come out on every single run.
 """
 
-import os
-import shutil
+from pathlib import Path
 
-REVIEW = (
-    "This doorstop has held the same door open for nine years without a "
-    "thank-you, a promotion, or a day off \u2014 and it would do it all again "
-    "tomorrow, because it literally cannot do anything else."
-)
+DESTINATION = Path("/output") / "entry.txt"
 
-OUTPUT_DIR = "/output"
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, "entry.txt")
+DOORSTOP_VERDICT = "This doorstop has held the same door open for nine years "
+DOORSTOP_VERDICT += "without a thank-you, a promotion, or a day off — and it "
+DOORSTOP_VERDICT += "would do it all again tomorrow, because it literally "
+DOORSTOP_VERDICT += "cannot do anything else."
 
 
-def clear_output_dir(path):
-    """Remove every child of path without deleting path itself."""
-    os.makedirs(path, exist_ok=True)
-    for name in os.listdir(path):
-        child = os.path.join(path, name)
-        if os.path.isdir(child) and not os.path.islink(child):
-            shutil.rmtree(child)
+def tidy_folder(folder: Path) -> None:
+    """Empty a folder, leaving the folder itself standing."""
+    folder.mkdir(parents=True, exist_ok=True)
+    for entry in folder.iterdir():
+        if entry.is_dir() and not entry.is_symlink():
+            tidy_folder(entry)
+            entry.rmdir()
         else:
-            os.remove(child)
+            entry.unlink()
 
 
-def main():
-    if not 1 <= len(REVIEW) <= 200 or not REVIEW.strip():
-        raise ValueError("review must be 1-200 non-blank characters")
-    clear_output_dir(OUTPUT_DIR)
-    with open(OUTPUT_FILE, "w", encoding="utf-8", newline="\n") as handle:
-        handle.write(REVIEW)
+def run() -> None:
+    verdict = DOORSTOP_VERDICT
+    if not verdict.strip() or not 1 <= len(verdict) <= 200:
+        raise ValueError("verdict must be a non-blank line of 1-200 characters")
+    tidy_folder(DESTINATION.parent)
+    DESTINATION.write_text(verdict, encoding="utf-8")
 
 
 if __name__ == "__main__":
-    main()
+    run()
